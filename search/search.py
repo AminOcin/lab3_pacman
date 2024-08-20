@@ -61,7 +61,6 @@ class SearchProblem:
         """
         util.raiseNotDefined()
 
-
 def tinyMazeSearch(problem):
     """
     Returns a sequence of moves that solves tinyMaze.  For any other maze, the
@@ -82,85 +81,119 @@ def depthFirstSearch(problem):
     To get started, you might want to try some of these simple commands to
     understand the search problem that is being passed in:
 
-    print("Start:", problem.getStartState())
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+    print "Start:", problem.getStartState()
+    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
+    print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-    "*** YOUR CODE HERE ***"
-    from util import Stack
+    "*** MY CODE BEGINS HERE ***"
 
-    visited = set()                                             # set to keep track of visited nodes
-    fringe = Stack()                                            # stack used as fringe for keeping pairs of (node, path-to-node) 
-    fringe.push((problem.getStartState(), []))                  # push (Node, [path-from-start-to-node]) pair into the fringe
-    curr_node, path_to_node = fringe.pop()
+    currState = problem.getStartState() #We get our initial State as currState
+    ourStack = util.Stack()  #We initiliaze a stack
+    ourStack.push([[currState]]) #we push our start state to ourStack 
+    visitedSet = [] #we'll do some book keeping so that we don't do cycles
 
-    while(not problem.isGoalState(curr_node)):                  # while not reached a goal state
+    while (ourStack.isEmpty() != True): #We loop till we make sure our search is complete
         
-        if curr_node not in visited:                            # if current node is not visited yet
-            visited.add(curr_node)              
-            successors = problem.getSuccessors(curr_node)       # get the successors of the current node
-            for successor in successors:                        # push each successor into the fringe
-                child_node = successor[0]
-                child_path = successor[1]
-                # construct full path to child node
-                full_path = path_to_node + [child_path]
-                fringe.push((child_node, full_path))
+        currList = ourStack.pop() #Get the top list on the stack
+        currState = currList[len(currList)-1] #Pull the last state from that list, this is  what we will be working on
         
-        curr_node, path_to_node = fringe.pop()                  # get the next node from fringe
+        if currState[0] not in visitedSet: #if these coordinates are not visited we visit them
+            visitedSet.append(currState[0]) #we mark these new coordinats as visited
+            curSuccessors = problem.getSuccessors(currState[0]) #For that currState, we get the neighbours
+            unvisitedSuccessors = [] #here we will seperate the neighbours which are not visited yeter
+            for i in range(len(curSuccessors)):
+                if curSuccessors[i][0] not in visitedSet:
+                    unvisitedSuccessors.append(curSuccessors[i])
 
-    return path_to_node                                         # return full path to goal node
+            if (len(unvisitedSuccessors) > 0): #if we have unvisited neighbours, we check the last one so if it's the answer we can just 
+            #figure it out here, because that will be the one we will pop from the stack next iteration anyway
+                lastNeighbour = unvisitedSuccessors[len(unvisitedSuccessors)-1]
+                
+                if problem.isGoalState(lastNeighbour[0]): #if it's the goal state we found it
+                        tempList = currList + [lastNeighbour]
+                        answer = [] #we create our answer list which we will return 
+                        for i in range(len(tempList)-1): #we just copy the actions because they tell pacman what to do
+                            stateToGo = tempList[i+1]
+                            answer.append(stateToGo[1])
+                        return answer #finally we return the answer
+
+            for neighbourState in unvisitedSuccessors: #if we couldn't find the goal, we proceed to each of the unvisited neighbours
+                tempList = [] + currList #we create a copy of the current list
+                tempList.append(neighbourState) #then we add the neighbour
+                ourStack.push(tempList) #we push that tempList for further explorations
+
+    util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    from util import Queue
+    "*** MY CODE BEGINS HERE ***"
+    currState = problem.getStartState() #We get our initial State as currState again
+    ourQueue = util.Queue()  #We initiliaze a queue this time
+    ourQueue.push([(currState,None,0)]) #we push our start state to ourQueue 
+    visitedSet = [] #keeping track of the coordinates which are already visited
+    while (ourQueue.isEmpty() != True): #We loop till we make sure our search is complete
+        currList = ourQueue.pop() #Get the front list in ourQueue
+        currState = currList[len(currList)-1] #Pull the last state from that list, this is  what we will be working on
+        if currState[0] not in visitedSet: #if it is not visited we pay a visit
+            visitedSet.append(currState[0]) #first we mark it as visited 
+            if problem.isGoalState(currState[0]): #then if it's the goal state we found it
+                answer = [] #we create our answer list which we will return as an answer
+                for i in range(len(currList)-1): #we just gather the actions as an answer
+                    stateToGo = currList[i+1]
+                    answer.append(stateToGo[1])
+                return answer #finally we return the answer
+            #if we couldn't find the goal state, we need to further explore
+            curSuccessors = problem.getSuccessors(currState[0]) #For that currState, we get the neighbours
+            unvisitedSuccessors = []
+            for i in range(len(curSuccessors)): #we distinguish the unvisited neighbours for proceeding correctly
+                if curSuccessors[i][0] not in visitedSet:
+                    unvisitedSuccessors.append(curSuccessors[i])
+            for neighbourState in unvisitedSuccessors: #for each of these neighbours          
+                tempList = [] + currList #we create a copy of the current list
+                tempList.append(neighbourState) #then we add the neighbour
+                ourQueue.push(tempList) #we push that tempList for further explorations
 
-    visited = set()                                        # set to keep track of visited nodes
-    fringe = Queue()                                       # keeping pairs (node, path_to_node) for implementing the BFS
-    fringe.push((problem.getStartState(), []))             # push the pair (start_state, []) into the fringe
-    curr_node, path_to_node = fringe.pop()                 # get the current node from the fringe (queue)
-
-    while(not problem.isGoalState(curr_node)):             # while not reached a goal state
-        
-        if curr_node not in visited:
-            visited.add(curr_node)
-            successors = problem.getSuccessors(curr_node)
-            for successor in successors:
-                child_node = successor[0]   
-                child_path = successor[1]   
-                full_path = path_to_node + [child_path]     # assign the full path from start to child
-                fringe.push((child_node, full_path))        # push the pair (child_node, [full-path-to-child]) into the fringe
-    
-        curr_node, path_to_node = fringe.pop()
-    
-    return path_to_node                                     # return the full path to goal node 
+    util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    from util import PriorityQueue
+    "*** MY CODE BEGINS HERE ***"
+    currState = problem.getStartState() #our beginning state is called currState again
+    ourPriorityQueue = util.PriorityQueue()  #We initiliaze a priority queue this time because the costs matter
+    ourPriorityQueue.push([[currState,None,0]],0) #we push our start state to our PriorityQueue with 0 cost because it doesn't matter anyway 
+    visitedSet = [] #we'll keep doing bookkeeping
+
+    while (ourPriorityQueue.isEmpty() != True): #as long as our priority queue has a list, we have a chance of finding our goal
+        currList = ourPriorityQueue.pop() #we get the first list in the queue, which has the least cost
+        currState = currList[len(currList)-1] #we seperate it's last element to work with
     
-    visited = set()                                             # set to keep track of visited nodes
-    fringe = PriorityQueue()                                    # implementing the UCS with a PQ
-    fringe.push((problem.getStartState(), [], 0), 0)            # pushing into PQ ((initial_state, path_to-initial-state = null, cost-of-this-path=0), priority of item=0)
+        if currState[0] not in visitedSet: #if this element is not visited yet
+            visitedSet.append(currState[0]) #we mark it as visited
+            
+            if problem.isGoalState(currState[0]): #and if we are lucky and if it's the goal state we found it
+                answer = [] #we create our answer list which we will return as an answer
+                for i in range(len(currList)-1):
+                    stateToGo = currList[i+1]
+                    answer.append(stateToGo[1])
+                return answer #finally we return the answer
 
-    curr_node, path_to_node, cost_to_node = fringe.pop()
+            curSuccessors = problem.getSuccessors(currState[0]) #to proceed further we call the neighbours
+            unvisitedSuccessors = []
+            for i in range(len(curSuccessors)): #we get the unvisited neighbours only thanks to our bookkeeping
+                if curSuccessors[i][0] not in visitedSet:
+                    unvisitedSuccessors.append(curSuccessors[i])
+            #in order to push new lists to our priority queue, we'll  need to calculate the cost of this list
+            curCost = 0 
+            for i in range(len(currList)):
+                curCost = curCost + currList[i][2]
 
-    while (not problem.isGoalState(curr_node)):                 # while not reached a goal state
-        if curr_node not in visited:                
-            visited.add(curr_node)
-            successors = problem.getSuccessors(curr_node)   
-            for successor in successors:
-                child = successor[0]
-                child_path = successor[1]
-                child_cost = successor[2]
-                full_path = path_to_node + [child_path]
-                total_cost = cost_to_node + child_cost
-                # priority of each node is the total_cost for reaching it
-                fringe.push((child, full_path, total_cost), total_cost)
-        curr_node, path_to_node, cost_to_node = fringe.pop()
+            for neighbourState in unvisitedSuccessors: #for each of the unvisited neighbours
+                    tempList = [] + currList #we create a copy of the current list
+                    tempList.append(neighbourState) #then we add the neighbour
+                    tempCost = curCost + neighbourState[2] #we add the current cost with the neighbours cost and then
+                    ourPriorityQueue.push(tempList,tempCost) #we push that tempList with the calcualted cost for further explorations
 
-    return path_to_node                                         # return the full path to goal node 
+    util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
     """
@@ -171,31 +204,43 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    from util import PriorityQueue
+    "*** MY CODE BEGINS HERE ***"
+    currState = problem.getStartState() #our beginning state is called currState again
+    ourPriorityQueue = util.PriorityQueue()  #We initiliaze a priority queue just like UCS
+    ourPriorityQueue.push([(currState,None,0)],heuristic(currState,problem)) #we push our initial state to the PQueue with heuristic function, because we can
+    visitedSet = [] #bookkeeping is still required
 
-    visited = set()
-    fringe = PriorityQueue()                                                                        # implementing the A* using PQ
-    fringe.push((problem.getStartState(), [], 0), 0 + heuristic(problem.getStartState(), problem))  # push((current-node, path-to-current-node, path-cost), g(x)=g(x)+h(x))
+    while (ourPriorityQueue.isEmpty() != True):
+        currList = ourPriorityQueue.pop()
+        currState = currList[len(currList)-1]
+        
+        if currState[0] not in visitedSet:
+            visitedSet.append(currState[0])
+            
+            if problem.isGoalState(currState[0]): #if it's the goal state we found it
+                answer = [] #we create our answer list which we will return as an answer
+                for i in range(len(currList)-1):
+                    stateToGo = currList[i+1]
+                    answer.append(stateToGo[1])
+                return answer #finally we return the answer
 
-    curr_node, path_to_node, cost_to_node = fringe.pop()    
-    
-    while (not problem.isGoalState(curr_node)):                                                     # while not reached a goal state
-        if curr_node not in visited:
-            visited.add(curr_node)
-            successors = problem.getSuccessors(curr_node)
-            for successor in successors:
-                child = successor[0]
-                child_path = successor[1]
-                child_cost = successor[2]
-                full_path = path_to_node + [child_path]
-                total_cost = cost_to_node + child_cost
-                priority = total_cost + heuristic(child, problem)                                    # the priority of each item is the combined total_cost value + the heuristic's value
-                fringe.push((child, full_path, total_cost), priority)                                # push the new (successor) node into the fringe
-        curr_node, path_to_node, cost_to_node = fringe.pop()
+            curSuccessors = problem.getSuccessors(currState[0])
+            unvisitedSuccessors = []
+            for i in range(len(curSuccessors)):
+                if curSuccessors[i][0] not in visitedSet:
+                    unvisitedSuccessors.append(curSuccessors[i])
 
-    return path_to_node                                                                              # return the full path to goal node
-    
+            curCost = 0 #we calculate the currentcost before we push to our Pqueue
+            for i in range(len(currList)):
+                curCost = curCost + currList[i][2]
+
+            for neighbourState in unvisitedSuccessors: #for each of these neighbours
+                    tempList = [] + currList #we create a copy of the current list
+                    tempList.append(neighbourState) #then we add the neighbour
+                    #as we have the current cost and the neighbors cost now we add them with the heuristics
+                    tempCost = curCost + neighbourState[2] + heuristic(neighbourState[0],problem)
+                    ourPriorityQueue.push(tempList,tempCost) #we push that tempList for further explorations
+    util.raiseNotDefined()
 
 # Abbreviations
 bfs = breadthFirstSearch
